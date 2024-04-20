@@ -46,7 +46,12 @@ def get_block_lengths(file):
 
 
 def print_line_tree_lines(line: str, block_lengths: int, block_index: int):
-    tab_num: int = line.split('-')[0].count('    ')
+    if (line.split('-')[0].startswith(' ')):
+        tab_num: int = line.split('-')[0].count('    ')
+    elif (line.split('-')[0].startswith('\t')):
+        tab_num: int = line.split('-')[0].count('\t')
+    else:
+        return
     for i in range(tab_num * branch_width_mult):
         if i == 0 and block_line_index == block_lengths[block_index] - 1:
             print(' └', end='')
@@ -76,7 +81,7 @@ def print_task(name: str, status):
 
 
 def validate_task_line(line: str):
-    if line.strip() != '':
+    if line.strip().startswith('- '):
         return True
     else:
         return False
@@ -93,7 +98,7 @@ class Status(Enum):
     DONE = 1
 
 # CONFIGS
-file_name = 'general.md'
+file_name = 'test.md'
 
 branch_width_mult: int = 4
 column_tasks_width = 40
@@ -134,7 +139,7 @@ if __name__ == '__main__':
                     in_subtasks = False
                 print(end = '\n')
 
-            elif line.startswith(' '):
+            elif line.startswith(' ') or line.startswith('\t'):
                 in_subtasks = True
                 block_line_index += 1
                 print_line_tree_lines(line, block_lengths, block_index)
