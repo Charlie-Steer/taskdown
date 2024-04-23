@@ -45,7 +45,10 @@ def get_block_lengths(file):
         return block_lenghts
 
 
-def print_line_tree_lines(line: str, block_lengths: int, block_index: int):
+def print_line_tree_chars(line: str, block_lengths: int, block_index: int):
+    branch_string: str = " "
+    branch_len = 0
+
     if (line.split('-')[0].startswith(' ')):
         tab_num: int = line.split('-')[0].count('    ')
     elif (line.split('-')[0].startswith('\t')):
@@ -54,12 +57,19 @@ def print_line_tree_lines(line: str, block_lengths: int, block_index: int):
         return
     for i in range(tab_num * branch_width_mult):
         if i == 0 and block_line_index == block_lengths[block_index] - 1:
-            print(' └', end='')
+            branch_string += "└"
+            #print(' └', end='')
         elif i == 0:
-            print(' ├', end='')
+            branch_string += "├"
+            #print(' ├', end='')
         else:
-            print('─', end='')
-    print(' ', end='')
+            branch_string += "─"
+            #print('─', end='')
+    branch_string += " "
+    print(branch_string, end="")
+
+    branch_len = len(branch_string)
+    return branch_len
 
 
 def print_checkbox(status):
@@ -67,6 +77,7 @@ def print_checkbox(status):
         print('[✓]', end=' ');
     else:
         print('[ ]', end=' ');
+    return 4
 
 
 def strikethrough_text(text):
@@ -75,9 +86,10 @@ def strikethrough_text(text):
 
 def print_task(name: str, status):
     if (status == Status.DONE):
-        print(strikethrough_text(name))
+        print(strikethrough_text(name),  end="")
     else:
-        print(name)
+        print(name, end="")
+    return name
 
 
 def validate_task_line(line: str):
@@ -87,9 +99,10 @@ def validate_task_line(line: str):
         return False
 
 
-def print_whitespace(number: int):
-    for i in range(column_tasks_width):
+def print_whitespace(number: int, end=''):
+    for i in range(number):
         print(' ', end='')
+    print(end=end)
 
 
 
@@ -101,9 +114,9 @@ class Status(Enum):
 file_name = 'test.md'
 
 branch_width_mult: int = 4
-column_tasks_width = 40
-column_priority_width = 20
-column_due_width = 40
+tasks_column_width = 40
+priority_column_width = 20
+due_column_width = 40
 
 
 if __name__ == '__main__':
@@ -113,6 +126,7 @@ if __name__ == '__main__':
     #color_code = 31
     #print(f"\033[{color_code}m{char}\033[0m")
 
+    #TODO: Column titles are not considered in width
     print_project_name(file_name)
     print('Tasks', end='')
     print_whitespace(40)
@@ -130,6 +144,9 @@ if __name__ == '__main__':
 
         for index, line in enumerate(file):
             in_subtasks = False
+            text_field_width = 0
+            branch_len = 0
+            checkbox_len = 4
 
             # Print branch lines
             if line.startswith('-'):
@@ -142,7 +159,7 @@ if __name__ == '__main__':
             elif line.startswith(' ') or line.startswith('\t'):
                 in_subtasks = True
                 block_line_index += 1
-                print_line_tree_lines(line, block_lengths, block_index)
+                branch_len = print_line_tree_chars(line, block_lengths, block_index)
 
 
             is_valid_task_line = validate_task_line(line)
@@ -151,6 +168,14 @@ if __name__ == '__main__':
                     status = Status.DONE
                 else:
                     status = Status.NOT_STARTED
-                print_checkbox(status)
+                checkbox_len = print_checkbox(status)
                 task_name: str = get_task_name(line)
                 print_task(task_name, status)
+
+                text_field_width = branch_len + checkbox_len + len(task_name)
+                field_whitespace_len = tasks_column_width - text_field_width
+                print_whitespace(field_whitespace_len, end='|')
+
+                print(end="\n")
+
+
